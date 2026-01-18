@@ -184,7 +184,7 @@ export default class DefaultMenu implements CurrentMenu {
         // if the selected layout was changed externaly, update the selected button
         this._signals.connect(
             Settings,
-            Settings.KEY_SETTING_SELECTED_LAYOUTS,
+            Settings.KEY_SETTING_SELECTED_LAYOUTS_BY_TOPOLOGY,
             () => {
                 this._updateScaling();
                 if (this._layoutsRows.length !== getMonitors().length)

@@ -4,6 +4,61 @@ import { Monitor } from 'resource:///org/gnome/shell/ui/layout.js';
 
 export const getMonitors = (): Monitor[] => Main.layoutManager.monitors;
 
+export const getMonitorTopologyKey = (): string => {
+    const monitors = getMonitors();
+    const entries = monitors.map((monitor, index) => {
+        const typedMonitor = monitor as {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+            scale?: number;
+            connector?: string;
+            name?: string;
+            displayName?: string;
+            vendor?: string;
+            product?: string;
+            serial?: string;
+        };
+
+        const identityParts = [
+            typedMonitor.connector,
+            typedMonitor.name,
+            typedMonitor.displayName,
+            typedMonitor.vendor,
+            typedMonitor.product,
+            typedMonitor.serial,
+        ].filter(Boolean);
+
+        if (identityParts.length === 0) identityParts.push(`index:${index}`);
+
+        return {
+            identity: identityParts.join('|'),
+            x: typedMonitor.x,
+            y: typedMonitor.y,
+            width: typedMonitor.width,
+            height: typedMonitor.height,
+            scale: typedMonitor.scale ?? 1,
+        };
+    });
+
+    entries.sort(
+        (a, b) =>
+            a.x - b.x ||
+            a.y - b.y ||
+            a.width - b.width ||
+            a.height - b.height ||
+            a.identity.localeCompare(b.identity),
+    );
+
+    return entries
+        .map(
+            (entry) =>
+                `${entry.identity}@${entry.width}x${entry.height}+${entry.x}+${entry.y}*${entry.scale}`,
+        )
+        .join('||');
+};
+
 export const isPointInsideRect = (
     point: { x: number; y: number },
     rect: Mtk.Rectangle,

@@ -1,6 +1,7 @@
 import { Gio, GObject, GLib } from '../gi/shared';
 import Layout from '../components/layout/Layout';
 import Tile from '../components/layout/Tile';
+import { getMonitorTopologyKey } from '../utils/ui';
 
 export enum ActivationKey {
     NONE = -1,
@@ -107,6 +108,8 @@ export default class Settings {
     static KEY_TILE_PREVIEW_ANIMATION_TIME = 'tile-preview-animation-time';
     static KEY_SETTING_LAYOUTS_JSON = 'layouts-json';
     static KEY_SETTING_SELECTED_LAYOUTS = 'selected-layouts';
+    static KEY_SETTING_SELECTED_LAYOUTS_BY_TOPOLOGY =
+        'selected-layouts-by-topology';
     static KEY_WINDOW_BORDER_WIDTH = 'window-border-width';
     static KEY_ENABLE_SMART_WINDOW_BORDER_RADIUS = 'enable-smart-window-border-radius';
     static KEY_QUARTER_TILING_THRESHOLD = 'quarter-tiling-threshold';
@@ -518,7 +521,50 @@ export default class Settings {
         }
     }
 
-    static get_selected_layouts(): string[][] {
+    static get_selected_layouts(topologyKey?: string): string[][] {
+        const resolvedKey = topologyKey ?? getMonitorTopologyKey();
+        const byTopology = this.get_selected_layouts_by_topology();
+        if (resolvedKey in byTopology) return byTopology[resolvedKey];
+
+        const legacyLayouts = this.get_selected_layouts_legacy();
+        if (legacyLayouts.length > 0)
+            this.save_selected_layouts(legacyLayouts, resolvedKey);
+
+        return legacyLayouts;
+    }
+
+    static get_selected_layouts_by_topology(): Record<string, string[][]> {
+        const raw =
+            this._settings?.get_string(
+                Settings.KEY_SETTING_SELECTED_LAYOUTS_BY_TOPOLOGY,
+            ) || '{}';
+        try {
+            const parsed = JSON.parse(raw) as Record<string, unknown>;
+            if (!parsed || typeof parsed !== 'object') return {};
+
+            const result: Record<string, string[][]> = {};
+            Object.entries(parsed).forEach(([key, value]) => {
+                const normalized = this._normalize_selected_layouts(value);
+                if (normalized.length === 0) return;
+                result[key] = normalized;
+            });
+            return result;
+        } catch (_unused) {
+            return {};
+        }
+    }
+
+    private static _normalize_selected_layouts(value: unknown): string[][] {
+        if (!Array.isArray(value)) return [];
+        return value.map((workspace) => {
+            if (!Array.isArray(workspace)) return [];
+            return workspace.filter(
+                (layoutId) => typeof layoutId === 'string',
+            );
+        });
+    }
+
+    private static get_selected_layouts_legacy(): string[][] {
         const variant = this._settings?.get_value(
             Settings.KEY_SETTING_SELECTED_LAYOUTS,
         );
@@ -660,7 +706,38 @@ export default class Settings {
         );
     }
 
-    static save_selected_layouts(ids: string[][]) {
+    static save_selected_layouts(ids: string[][], topologyKey?: string) {
+        const resolvedKey = topologyKey ?? getMonitorTopologyKey();
+        const byTopology = this.get_selected_layouts_by_topology();
+
+        if (ids.length === 0) {
+            delete byTopology[resolvedKey];
+            this.save_selected_layouts_by_topology(byTopology);
+            this.save_selected_layouts_legacy([]);
+            return;
+        }
+
+        byTopology[resolvedKey] = ids;
+        this.save_selected_layouts_by_topology(byTopology);
+        this.save_selected_layouts_legacy(ids);
+    }
+
+    private static save_selected_layouts_by_topology(
+        ids: Record<string, string[][]>,
+    ) {
+        if (Object.keys(ids).length === 0) {
+            this._settings?.reset(
+                Settings.KEY_SETTING_SELECTED_LAYOUTS_BY_TOPOLOGY,
+            );
+            return;
+        }
+        this._settings?.set_string(
+            Settings.KEY_SETTING_SELECTED_LAYOUTS_BY_TOPOLOGY,
+            JSON.stringify(ids),
+        );
+    }
+
+    private static save_selected_layouts_legacy(ids: string[][]) {
         if (ids.length === 0) {
             this._settings?.reset(Settings.KEY_SETTING_SELECTED_LAYOUTS);
             return;

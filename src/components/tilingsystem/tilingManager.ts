@@ -162,7 +162,7 @@ export class TilingManager {
     public enable() {
         this._signals.connect(
             Settings,
-            Settings.KEY_SETTING_SELECTED_LAYOUTS,
+            Settings.KEY_SETTING_SELECTED_LAYOUTS_BY_TOPOLOGY,
             () => {
                 const ws = global.workspaceManager.get_active_workspace();
                 if (!ws) return;
