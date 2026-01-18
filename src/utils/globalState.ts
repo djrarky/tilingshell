@@ -82,7 +82,7 @@ export default class GlobalState extends GObject.Object {
 
         this._signals.connect(
             Settings,
-            Settings.KEY_SETTING_SELECTED_LAYOUTS,
+            Settings.KEY_SETTING_SELECTED_LAYOUTS_BY_TOPOLOGY,
             () => {
                 const selected_layouts = Settings.get_selected_layouts();
                 if (selected_layouts.length === 0) {
