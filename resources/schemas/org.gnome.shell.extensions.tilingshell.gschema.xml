@@ -62,6 +62,11 @@
             <summary>Selected layouts</summary>
             <description>Each monitor's active layout used by the monitor tiling manager.</description>
         </key>
+        <key name="selected-layouts-monitors" type="as">
+            <default>[]</default>
+            <summary>Selected layouts monitor signatures</summary>
+            <description>Monitor signatures used to remap selected layouts when monitor ordering changes.</description>
+        </key>
         <key name="restore-window-original-size" type="b">
             <default>true</default>
             <summary>Restore window size</summary>

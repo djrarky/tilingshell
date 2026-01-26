@@ -24,7 +24,7 @@ import Settings from './settings/settings';
 import { ActivationKey } from './settings/settings';
 import { logger } from './utils/logger';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import Layout from './components/layout/Layout';
+import type { Layout } from './settings/layoutTypes';
 import SettingsExport from './settings/settingsExport';
 import { gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 // @ts-expect-error "Module exists"

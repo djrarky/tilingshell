@@ -1,6 +1,5 @@
 import { Gio, GObject, GLib } from '../gi/shared';
-import Layout from '../components/layout/Layout';
-import Tile from '../components/layout/Tile';
+import type { Layout } from './layoutTypes';
 
 export enum ActivationKey {
     NONE = -1,
@@ -107,6 +106,7 @@ export default class Settings {
     static KEY_TILE_PREVIEW_ANIMATION_TIME = 'tile-preview-animation-time';
     static KEY_SETTING_LAYOUTS_JSON = 'layouts-json';
     static KEY_SETTING_SELECTED_LAYOUTS = 'selected-layouts';
+    static KEY_SETTING_SELECTED_LAYOUTS_MONITORS = 'selected-layouts-monitors';
     static KEY_WINDOW_BORDER_WIDTH = 'window-border-width';
     static KEY_ENABLE_SMART_WINDOW_BORDER_RADIUS = 'enable-smart-window-border-radius';
     static KEY_QUARTER_TILING_THRESHOLD = 'quarter-tiling-threshold';
@@ -544,112 +544,118 @@ export default class Settings {
         return result;
     }
 
+    static get_selected_layouts_monitors(): string[] {
+        return this._settings?.get_strv(
+            Settings.KEY_SETTING_SELECTED_LAYOUTS_MONITORS,
+        ) ?? [];
+    }
+
     static reset_layouts_json() {
         this.save_layouts_json([
-            new Layout(
-                [
-                    new Tile({
+            {
+                id: 'Layout 1',
+                tiles: [
+                    {
                         x: 0,
                         y: 0,
                         height: 0.5,
                         width: 0.22,
                         groups: [1, 2],
-                    }), // top-left
-                    new Tile({
+                    }, // top-left
+                    {
                         x: 0,
                         y: 0.5,
                         height: 0.5,
                         width: 0.22,
                         groups: [1, 2],
-                    }), // bottom-left
-                    new Tile({
+                    }, // bottom-left
+                    {
                         x: 0.22,
                         y: 0,
                         height: 1,
                         width: 0.56,
                         groups: [2, 3],
-                    }), // center
-                    new Tile({
+                    }, // center
+                    {
                         x: 0.78,
                         y: 0,
                         height: 0.5,
                         width: 0.22,
                         groups: [3, 4],
-                    }), // top-right
-                    new Tile({
+                    }, // top-right
+                    {
                         x: 0.78,
                         y: 0.5,
                         height: 0.5,
                         width: 0.22,
                         groups: [3, 4],
-                    }), // bottom-right
+                    }, // bottom-right
                 ],
-                'Layout 1',
-            ),
-            new Layout(
-                [
-                    new Tile({
+            },
+            {
+                id: 'Layout 2',
+                tiles: [
+                    {
                         x: 0,
                         y: 0,
                         height: 1,
                         width: 0.22,
                         groups: [1],
-                    }),
-                    new Tile({
+                    },
+                    {
                         x: 0.22,
                         y: 0,
                         height: 1,
                         width: 0.56,
                         groups: [1, 2],
-                    }),
-                    new Tile({
+                    },
+                    {
                         x: 0.78,
                         y: 0,
                         height: 1,
                         width: 0.22,
                         groups: [2],
-                    }),
+                    },
                 ],
-                'Layout 2',
-            ),
-            new Layout(
-                [
-                    new Tile({
+            },
+            {
+                id: 'Layout 3',
+                tiles: [
+                    {
                         x: 0,
                         y: 0,
                         height: 1,
                         width: 0.33,
                         groups: [1],
-                    }),
-                    new Tile({
+                    },
+                    {
                         x: 0.33,
                         y: 0,
                         height: 1,
                         width: 0.67,
                         groups: [1],
-                    }),
+                    },
                 ],
-                'Layout 3',
-            ),
-            new Layout(
-                [
-                    new Tile({
+            },
+            {
+                id: 'Layout 4',
+                tiles: [
+                    {
                         x: 0,
                         y: 0,
                         height: 1,
                         width: 0.67,
                         groups: [1],
-                    }),
-                    new Tile({
+                    },
+                    {
                         x: 0.67,
                         y: 0,
                         height: 1,
                         width: 0.33,
                         groups: [1],
-                    }),
+                    },
                 ],
-                'Layout 4',
-            ),
+            },
         ]);
     }
 
@@ -672,6 +678,19 @@ export default class Settings {
         this._settings?.set_value(
             Settings.KEY_SETTING_SELECTED_LAYOUTS,
             result,
+        );
+    }
+
+    static save_selected_layouts_monitors(signatures: string[]) {
+        if (signatures.length === 0) {
+            this._settings?.reset(
+                Settings.KEY_SETTING_SELECTED_LAYOUTS_MONITORS,
+            );
+            return;
+        }
+        this._settings?.set_strv(
+            Settings.KEY_SETTING_SELECTED_LAYOUTS_MONITORS,
+            signatures,
         );
     }
 
